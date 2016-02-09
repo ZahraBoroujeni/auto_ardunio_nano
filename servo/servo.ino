@@ -12,7 +12,7 @@ int potpin = 0;  // analog pin used to connect the potentiometer
 int val;    // variable to read the value from the analog pin
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
-#define servo_pin 13
+#define servo_pin 10
 
 
 void setup() {
