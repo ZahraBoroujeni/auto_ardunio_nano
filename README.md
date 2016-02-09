@@ -2,7 +2,9 @@
 
 #main
 control power_board using green_button attached Pin PD4
+
 Control lights using serual port commands
+
 control servo motor using serial port commands
 
 Install MsTimer2 on {arduino-path}/libraries/
