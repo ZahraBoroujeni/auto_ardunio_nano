@@ -154,9 +154,9 @@ void lightControl(){
   servo_control=false; 
   resetLights();
   if (inputString=="enL\r")
-    digitalWrite(LED_STATUS_EN, LOW);
-  else if (inputString=="diL\r")
     digitalWrite(LED_STATUS_EN, HIGH);
+  else if (inputString=="diL\r")
+    digitalWrite(LED_STATUS_EN, LOW);
   else if (inputString=="le\r")
   {
     MsTimer2::set(500, flashLeftLight); // 0.5 s period
@@ -168,25 +168,25 @@ void lightControl(){
     MsTimer2::start();
   } 
   else if (inputString=="st\r")
-    digitalWrite(LED_LIGHTS_C0, LOW);
+    digitalWrite(LED_LIGHTS_C0, HIGH);
   else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C1, LOW);
+    digitalWrite(LED_LIGHTS_C1, HIGH);
   else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C2, LOW);
+    digitalWrite(LED_LIGHTS_C2, HIGH);
   else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C3, LOW);
+    digitalWrite(LED_LIGHTS_C3, HIGH);
   else
     servo_control=true; 
 } 
 void resetLights()
 {
   MsTimer2::stop(); //stop flashing lights if it is on
-  digitalWrite(LED_LIGHTS_B0, HIGH);
-  digitalWrite(LED_LIGHTS_B1, HIGH);
-  digitalWrite(LED_LIGHTS_C0, HIGH);
-  digitalWrite(LED_LIGHTS_C1, HIGH);
-  digitalWrite(LED_LIGHTS_C2, HIGH);
-  digitalWrite(LED_LIGHTS_C3, HIGH);
+  digitalWrite(LED_LIGHTS_B0, LOW);
+  digitalWrite(LED_LIGHTS_B1, LOW);
+  digitalWrite(LED_LIGHTS_C0, LOW);
+  digitalWrite(LED_LIGHTS_C1, LOW);
+  digitalWrite(LED_LIGHTS_C2, LOW);
+  digitalWrite(LED_LIGHTS_C3, LOW);
 }
 void flashLeftLight()
 {
