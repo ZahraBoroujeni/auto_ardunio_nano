@@ -16,6 +16,7 @@ String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 boolean interrupt_flag=false;
 boolean servo_control=false;
+boolean ledState=false;
 
 #define servo_pin 10
 #define POWER_STATE_D0 8
@@ -25,7 +26,7 @@ boolean servo_control=false;
 
 
 #define LED_STATUS_EN 3
-#define LED_LIGHTS_B0 11
+#define LED_LIGHTS_B0 11  //turn left
 #define LED_LIGHTS_B1 13
 #define LED_LIGHTS_C0 A0
 #define LED_LIGHTS_C1 A1
@@ -72,7 +73,6 @@ void setup() {
   digitalWrite(POWER_STATE_D1, HIGH); 
  // attachInterrupt(1,count,RISING);
   PCattachInterrupt(4, count, FALLING );
-  MsTimer2::set(3000, turnOffCar); // 3 s period
 }
 
 void loop() {
@@ -92,6 +92,7 @@ void loop() {
 }
 /* Control power board*/
 void powerBoard(){
+  MsTimer2::set(3000, turnOffCar); // 3 s period
   MsTimer2::start();
   interrupt_flag=false;
   if (state%3==0)//Press green button for first time
@@ -157,9 +158,15 @@ void lightControl(){
   else if (inputString=="diL\r")
     digitalWrite(LED_STATUS_EN, HIGH);
   else if (inputString=="le\r")
-    digitalWrite(LED_LIGHTS_B0, LOW);
+  {
+    MsTimer2::set(500, flashLeftLight); // 0.5 s period
+    MsTimer2::start();
+  }  
   else if (inputString=="ri\r")
-    digitalWrite(LED_LIGHTS_B1, LOW);
+  {
+    MsTimer2::set(500, flashRightLight); // 0.5 s period
+    MsTimer2::start();
+  } 
   else if (inputString=="st\r")
     digitalWrite(LED_LIGHTS_C0, LOW);
   else if (inputString=="br\r")
@@ -173,12 +180,23 @@ void lightControl(){
 } 
 void resetLights()
 {
+  MsTimer2::stop(); //stop flashing lights if it is on
   digitalWrite(LED_LIGHTS_B0, HIGH);
   digitalWrite(LED_LIGHTS_B1, HIGH);
   digitalWrite(LED_LIGHTS_C0, HIGH);
   digitalWrite(LED_LIGHTS_C1, HIGH);
   digitalWrite(LED_LIGHTS_C2, HIGH);
   digitalWrite(LED_LIGHTS_C3, HIGH);
+}
+void flashLeftLight()
+{
+  ledState=!ledState;
+  digitalWrite(LED_LIGHTS_B0, ledState);
+}
+void flashRightLight()
+{
+  ledState=!ledState;
+  digitalWrite(LED_LIGHTS_B1, ledState);
 }
 /*
   SerialEvent occurs whenever a new data comes in the
