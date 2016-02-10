@@ -25,13 +25,13 @@ boolean ledState=false;
 #define BUTTON_RED 5
 
 
-#define LED_STATUS_EN 3
-#define LED_LIGHTS_B0 11  //turn left
-#define LED_LIGHTS_B1 13
-#define LED_LIGHTS_C0 A0
-#define LED_LIGHTS_C1 A1
-#define LED_LIGHTS_C2 A2
-#define LED_LIGHTS_C3 A3
+#define LED_STATUS_EN 3   //LED_STATUS_EN
+#define LED_BRACK 11  //LED_LIGHTS_B0
+#define LED_PARK_TAIL 13  //LED_LIGHTS_B1
+#define LED_TURN_LEFT A0  //LED_LIGHTS_C0
+#define LED_TURN_RIGHT A1  //LED_LIGHTS_C1
+#define LED_BACKUP A2  //LED_LIGHTS_C2
+#define LED_HEAD A3  //LED_LIGHTS_C3
 
 #define ADC6_BAT_VOLT_LEVEL A6
 #define ADC7_BAT_VOLT A7
@@ -82,9 +82,11 @@ void loop() {
   serialEvent(); //read serial port commands from odroid
   if (stringComplete) 
   {
+    servo_control=false;
     lightControl(); // control lights of the car, this function should call befor control motor
-    servoControl(); // control servo motor
-     inputString = "";
+    if (servo_control==true)
+      servoControl(); // control servo motor
+    inputString = "";
     stringComplete = false;
   }
   // clear the string:
@@ -127,7 +129,6 @@ void turnOffCar()
 }
 /* Control lights*/
 void servoControl(){
-  
     if (inputString=="en\r")
     {
       myservo.attach(servo_pin);
@@ -140,7 +141,7 @@ void servoControl(){
       //Serial.println("detach");
       //Serial.println(inputString);
     }
-    else if (servo_control==true)
+    else
     {
       //Serial.println(inputString);
       val=inputString.toInt();
@@ -150,8 +151,7 @@ void servoControl(){
    
 } 
 /* Control lights*/
-void lightControl(){
-  servo_control=false; 
+void lightControl(){ 
   resetLights();
   if (inputString=="enL\r")
     digitalWrite(LED_STATUS_EN, HIGH);
@@ -167,36 +167,38 @@ void lightControl(){
     MsTimer2::set(500, flashRightLight); // 0.5 s period
     MsTimer2::start();
   } 
-  else if (inputString=="st\r")
-    digitalWrite(LED_LIGHTS_C0, HIGH);
-  else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C1, HIGH);
-  else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C2, HIGH);
-  else if (inputString=="br\r")
-    digitalWrite(LED_LIGHTS_C3, HIGH);
+  else if (inputString=="stop\r")
+    digitalWrite(LED_BRACK, HIGH);
+  else if (inputString=="pa\r")
+    digitalWrite(LED_PARK_TAIL, HIGH);
+  else if (inputString=="ta\r")
+    digitalWrite(LED_PARK_TAIL, HIGH);
+  else if (inputString=="re\r")
+    digitalWrite(LED_BACKUP, HIGH);
+  else if (inputString=="fo\r")
+    digitalWrite(LED_HEAD, HIGH);
   else
     servo_control=true; 
 } 
 void resetLights()
 {
   MsTimer2::stop(); //stop flashing lights if it is on
-  digitalWrite(LED_LIGHTS_B0, LOW);
-  digitalWrite(LED_LIGHTS_B1, LOW);
-  digitalWrite(LED_LIGHTS_C0, LOW);
-  digitalWrite(LED_LIGHTS_C1, LOW);
-  digitalWrite(LED_LIGHTS_C2, LOW);
-  digitalWrite(LED_LIGHTS_C3, LOW);
+  digitalWrite(LED_TURN_LEFT, LOW);
+  digitalWrite(LED_TURN_RIGHT, LOW);
+  digitalWrite(LED_BRACK, LOW);
+  digitalWrite(LED_PARK_TAIL, LOW);
+  digitalWrite(LED_BACKUP, LOW);
+  digitalWrite(LED_HEAD, LOW);
 }
 void flashLeftLight()
 {
   ledState=!ledState;
-  digitalWrite(LED_LIGHTS_B0, ledState);
+  digitalWrite(LED_TURN_LEFT, ledState);
 }
 void flashRightLight()
 {
   ledState=!ledState;
-  digitalWrite(LED_LIGHTS_B1, ledState);
+  digitalWrite(LED_TURN_RIGHT, ledState);
 }
 /*
   SerialEvent occurs whenever a new data comes in the
