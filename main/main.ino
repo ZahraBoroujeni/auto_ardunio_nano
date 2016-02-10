@@ -24,7 +24,6 @@ boolean ledState=false;
 #define BUTTON_GREEN 4
 #define BUTTON_RED 5
 
-
 #define LED_STATUS_EN 3   //LED_STATUS_EN
 #define LED_BRACK 11  //LED_LIGHTS_B0
 #define LED_PARK_TAIL 13  //LED_LIGHTS_B1
@@ -56,22 +55,35 @@ volatile static uint8_t PCintLast[3];
 
 
 void setup() {
-  
-  myservo.attach(servo_pin);  // attaches the servo on pin 9 to the servo object
+  // attaches the servo on pin 9 to the servo object
+  myservo.attach(servo_pin);
+   
   // initialize serial:
   Serial.begin(115200);
+  
   // reserve 200 bytes for the inputString:
   inputString.reserve(200);
 
-  //power board control
+  // power board control
   pinMode(POWER_STATE_D0, OUTPUT);
   pinMode(POWER_STATE_D1, OUTPUT);
   pinMode(BUTTON_GREEN, INPUT);
   pinMode(BUTTON_RED, INPUT);
-  pinMode(13, OUTPUT);
+
+  // LED signals
+  pinMode(LED_STATUS_EN, OUTPUT);
+  pinMode(LED_BRACK, OUTPUT);
+  pinMode(LED_PARK_TAIL, OUTPUT);
+  pinMode(LED_TURN_LEFT, OUTPUT);
+  pinMode(LED_TURN_RIGHT, OUTPUT);
+  pinMode(LED_BACKUP, OUTPUT);
+  pinMode(LED_HEAD, OUTPUT);
+  
+  // power off
   digitalWrite(POWER_STATE_D0, HIGH);
   digitalWrite(POWER_STATE_D1, HIGH); 
- // attachInterrupt(1,count,RISING);
+
+  // green button interrupt
   PCattachInterrupt(4, count, FALLING );
 }
 
