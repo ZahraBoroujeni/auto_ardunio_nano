@@ -291,7 +291,7 @@ void checkBattery()
   battery_voltage = analogRead(A7);
  
   //Serial.print(battery_voltage);
-  if (battery_voltage<800)
+  if ((battery_voltage<770) && (battery_voltage>100)) //check also if there is a battery availabe! //14.8 volt
   {
     if (startFlashing==false)
     {
@@ -299,9 +299,9 @@ void checkBattery()
       MsTimer2::start();
       startFlashing=true;
     }
-    if (battery_voltage<750)
+    if (battery_voltage<740) //14.5 volt
     {
-      Serial.print("Please charge the Battery!");
+      Serial.print("Please charge the Battery!"); 
       startFlashing==false;
       digitalWrite(LED_STATUS_EN, LOW);
       digitalWrite(POWER_STATE_D0, LOW);
