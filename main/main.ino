@@ -17,6 +17,10 @@ boolean stringComplete = false;  // whether the string is complete
 boolean interrupt_flag=false;
 boolean servo_control=false;
 boolean ledState=false;
+boolean flashingLedState=false;
+boolean startFlashing=false;
+
+int battery_voltage = 0; 
 
 #define servo_pin 10
 #define POWER_STATE_D0 8
@@ -36,6 +40,7 @@ boolean ledState=false;
 #define ADC7_BAT_VOLT A7
 #define AIN0_BAT_VOLT_LEVEL 9
 #define AIN1_BAT_VOLT 10
+
 
 volatile uint8_t *port_to_pcmask[] = {
   &PCMSK0,
@@ -146,10 +151,18 @@ void setup() {
   pinMode(LED_TURN_RIGHT, OUTPUT);
   pinMode(LED_BACKUP, OUTPUT);
   pinMode(LED_HEAD, OUTPUT);
-  
+  // Enable Power light
+  digitalWrite(LED_STATUS_EN, LOW);
   // power 5 volt
   digitalWrite(POWER_STATE_D0, LOW);
   digitalWrite(POWER_STATE_D1, LOW); 
+  //delay(2000); 
+  //turnOffCar();
+
+  //check battery
+  //analogReadResolution(8);
+  delay(1000);
+  checkBattery();
 
   // green button interrupt
   PCattachInterrupt(4, count, FALLING );
@@ -163,6 +176,7 @@ void setup() {
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
+
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
@@ -206,10 +220,11 @@ void setup() {
         Serial.print(devStatus);
         Serial.println(F(")"));
     }
+    
 }
 
 void loop() {
-  //control Power board 5v arduino,5v arduino + 5 volt odroid, 5v arduino + 5 volt odroid + 12 volt motor
+  //control Power board switch between 5 volt and 12 volt for the brushless motor
  if (interrupt_flag==true)
     powerBoard();
   // wait for MPU interrupt or extra packet(s) available
@@ -257,35 +272,65 @@ void loop() {
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            Serial.print("ypr\t");
+            Serial.print("ypr\t");//yaw
             Serial.println(ypr[0] * 180/M_PI);
-            //Serial.print("\t");
+            //Serial.print("pitch\t");
             //Serial.print(ypr[1] * 180/M_PI);
-            //Serial.print("\t");
+            //Serial.print("roll\t");
             //Serial.println(ypr[2] * 180/M_PI);
         #endif
     }
+    checkBattery();
  
+}
+
+/* Check voltage of the battery */
+void checkBattery()
+{
+  // read the input on A7 at default resolution (10 bits)  
+  battery_voltage = analogRead(A7);
+ 
+  //Serial.print(battery_voltage);
+  if (battery_voltage<800)
+  {
+    if (startFlashing==false)
+    {
+      MsTimer2::set(500, lowBattery); // 0.5 s period
+      MsTimer2::start();
+      startFlashing=true;
+    }
+    if (battery_voltage<750)
+    {
+      Serial.print("Please charge the Battery!");
+      startFlashing==false;
+      digitalWrite(LED_STATUS_EN, LOW);
+      digitalWrite(POWER_STATE_D0, LOW);
+      digitalWrite(POWER_STATE_D1, HIGH);
+    }
+  }
+}
+void lowBattery()
+{
+  flashingLedState=!flashingLedState;
+  digitalWrite(LED_STATUS_EN, flashingLedState);
 }
 /* Control power board*/
 void powerBoard(){
-  MsTimer2::set(3000, turnOffCar); // 3 s period
-  MsTimer2::start();
   interrupt_flag=false;
-  if (state%2==0)//Press green button for first time
+  if (state%2==0)//Yellow
   {
     digitalWrite(POWER_STATE_D0, LOW);
     digitalWrite(POWER_STATE_D1, LOW); 
 
-  } else if (state%2==1) //Press green button for second time
+  } else if (state%2==1) //green
   {
     digitalWrite(POWER_STATE_D0, HIGH);
     digitalWrite(POWER_STATE_D1, LOW);
   } 
-//else if (state%3==2)//Press green button for third time
+//else if (state%3==2)//Red
 //  {
 //    digitalWrite(POWER_STATE_D0, LOW);
-//    digitalWrite(POWER_STATE_D0, HIGH); 
+//    digitalWrite(POWER_STATE_D1, HIGH); 
 //  }
 }
 void count()
@@ -299,9 +344,9 @@ void turnOffCar()
   if (carShutdown==0)
   {
     digitalWrite(POWER_STATE_D0, HIGH);
-    digitalWrite(POWER_STATE_D0, HIGH); 
+    digitalWrite(POWER_STATE_D1, HIGH); 
   }
-  MsTimer2::stop();
+  //MsTimer2::stop();
 }
 /* Control lights*/
 void servoControl(){
@@ -329,11 +374,7 @@ void servoControl(){
 /* Control lights*/
 void lightControl(){ 
   resetLights();
-  if (inputString=="enL\r")
-    digitalWrite(LED_STATUS_EN, HIGH);
-  else if (inputString=="diL\r")
-    digitalWrite(LED_STATUS_EN, LOW);
-  else if (inputString=="le\r")
+  if (inputString=="le\r")
   {
     MsTimer2::set(500, flashLeftLight); // 0.5 s period
     MsTimer2::start();
@@ -351,7 +392,7 @@ void lightControl(){
     digitalWrite(LED_PARK_TAIL, HIGH);
   else if (inputString=="re\r")
     digitalWrite(LED_BACKUP, HIGH);
-  else if (inputString=="fo\r")
+  else if (inputString=="fr\r")
     digitalWrite(LED_HEAD, HIGH);
   else
     servo_control=true; 
@@ -359,6 +400,7 @@ void lightControl(){
 void resetLights()
 {
   MsTimer2::stop(); //stop flashing lights if it is on
+  startFlashing=false;
   digitalWrite(LED_TURN_LEFT, LOW);
   digitalWrite(LED_TURN_RIGHT, LOW);
   digitalWrite(LED_BRACK, LOW);
@@ -501,4 +543,3 @@ SIGNAL(PCINT1_vect) {
 SIGNAL(PCINT2_vect) {
   PCint(2);
 }
-
